@@ -1,10 +1,5 @@
 //
 // unit itSystem, v2022-07, copyright 2022 by Ivo Tišljar
-//
-// ovo je jedan od mojih standardnih unit-a koji se koriste u Delphi programima
-//
-// ovdje imamo skup rutina opæe namjene
-
 
 unit itSystem;
 
@@ -22,31 +17,28 @@ const
   Tab = #9;
 
 
-// greška pri koverziji
+// conversionError
 
 type
-  EItSystemError = class (Exception)
+  EitSystemConversionError = class (Exception)
   end;
 
-// deklaracija javnih funkcija i procedura definiranih u ovom unit-u
 
-procedure ConvertPngToJpeg (const sPngFileName, sJpegFileName: String);
+procedure ConvertPngToJpeg (const PngFileName, JpegFileName: String);
 
 function  IfInt (const Test: boolean; const i1: integer): integer; overload;
 function  IfInt (const Test: boolean; const i1, i2: integer): integer; overload;
 function  IfStr (const Test: boolean; const s1: string): string; overload;
 function  IfStr (const Test: boolean; const s1, s2: string): string; overload;
 
-procedure OpenFileInDefaultBrowser (const Handle:HWND; const sFileName: string);
-procedure OpenFileInEdge (const Handle:HWND; const sFileName: string);
-procedure OpenFileInNotepadPlusPlus (const Handle:HWND; const sFileName: string);
-//procedure OpenURLInADefaultBrowser (const URL:string);
+procedure OpenFileInDefaultBrowser (const Handle:HWND; const FileName: string);
+procedure OpenFileInEdge (const Handle:HWND; const FileName: string);
+procedure OpenFileInNotepadPlusPlus (const Handle:HWND; const FileName: string);
 
-procedure StripBOMFromUtf8File (const sFileName:string);
-
+procedure StripBOMFromUtf8File (const FileName:string);
 
 
-// deklaracija funkcije s DEFAULT vrijednostima, tj. opcionalnim parametrima
+//  example function with parameters with default values
 
 function  LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
 
@@ -57,34 +49,32 @@ uses
   Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage, Vcl.Graphics;
 
 
-// =====================================================================================================================
-
-//
-
-procedure ConvertPngToJpeg (const sPngFileName, sJpegFileName: String);
+procedure ConvertPngToJpeg (const PngFileName, JpegFileName: String);
 
 var
-  Png: TPngImage;
-  Bmp: TBitmap;
-  Jpeg: TJpegImage;
+  PngImage: TPngImage;
+  BmpImage: TBitmap;
+  JpegImage: TJpegImage;
 
 begin
-  Png := TPngImage.Create;
-  Bmp := TBitmap.Create;
-  Jpeg := TJpegImage.Create;
+  PngImage := TPngImage.Create;
+  BmpImage := TBitmap.Create;
+  JpegImage := TJpegImage.Create;
+
   try
-    Png.LoadFromFile (sPngFileName);
-    Bmp.Width := Png.Width;
-    Bmp.Height := Png.Height;
-    Png.Draw (Bmp.Canvas, Bmp.Canvas.ClipRect);
-    Jpeg.Assign (Bmp);
-    Jpeg.SaveToFile (sJpegFileName);
+    PngImage.LoadFromFile (PngFileName);
+    BmpImage.Width := PngImage.Width;
+    BmpImage.Height := PngImage.Height;
+    PngImage.Draw (BmpImage.Canvas, BmpImage.Canvas.ClipRect);
+    JpegImage.Assign (BmpImage);
+    JpegImage.SaveToFile (JpegFileName);
   finally
-    FreeAndNil (Jpeg);
-    FreeAndNil (Bmp);
-    FreeAndNil (Png);
+    FreeAndNil (JpegImage);
+    FreeAndNil (BmpImage);
+    FreeAndNil (PngImage);
   end;
 end;
+
 
 // returns integer when test is true, 0 if test is false
 
@@ -131,107 +121,84 @@ begin
 end;
 
 
-
-// ---------------------------------------------------------------------------------------------------------------------
-
-//
-
 procedure OpenFileInDefaultBrowser (
-  const Handle:HWND;
-  const sFileName: string);
-
+  const Handle:HWND;          // (window) form handle
+  const FileName: string);    // file name (directory included)
 begin
-  ShellExecute(Handle, 'open', PChar(sFileName), '', nil, sw_ShowNormal);
+  ShellExecute (Handle, 'open', PChar (FileName), '', nil, sw_ShowNormal);
 end;
 
-// ---------------------------------------------------------------------------------------------------------------------
 
-// pokreæe Edge i u njemu otvara fajl s diska sa zadanim imenom. Ako je fajl otvoren u Edge-u od ranije otvara još
-// jednu kopiju fajla u novom tabu browsera
+// start Edge and opens file, if file is already open in Edge creates new tab with the file
 
 procedure OpenFileInEdge (
-  const Handle:HWND;          // handle forme (tj. njoj pripadnoj Windows prozora) iz koje je pozvana ova rutina
-  const sFileName: string);   // naziv fajla (s apsolutnom putanjom) koji otvaram u Edge-u
-
+  const Handle:HWND;          // (window) form handle
+  const FileName: string);    // file name (directory included)
 begin
-  ShellExecute (Handle, 'open', Pchar('"shell:Appsfolder\Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge"'),
-                Pchar ('"""' + sFileName + '"""'), nil, sw_ShowNormal);
+  ShellExecute (Handle, 'open', Pchar ('"shell:Appsfolder\Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge"'),
+               Pchar ('"""' + FileName + '"""'), nil, sw_ShowNormal);
 end;
 
-// ---------------------------------------------------------------------------------------------------------------------
 
-// pokreæe Notepad++ i u njemu otvara fajl s diska sa zadanim imenom. Ako je fajl otvoren u Notepad++-u od ranije
-// Notepad++ aktivira tab u kojem se nalazi fajl i ako je bilo promjena od kada je zadnji puta korisnik gledao fajl
-// u Notepad++-u pita da li da ponovno uèita fajl
+// start Notepad++ and opens file, if file is already open in Notepad++ activate tab with a file and ask for reload if file was changed
 
 procedure OpenFileInNotepadPlusPlus (
-  const Handle:HWND;          // handle forme (tj. njoj pripadnoj Windows prozora) iz koje je pozvana ova rutina
-  const sFileName: string);   // naziv fajla (s apsolutnom putanjom) koji otvaram u Notepad++-u
-
+  const Handle:HWND;          // (window) form handle
+  const FileName: string);    // file name (directory included)
 begin
   ShellExecute (Handle, 'open', Pchar ('"C:\Program Files (x86)\Notepad++\notepad++.exe"'),
-                Pchar ('"' + sFileName + '"'), nil, sw_ShowNormal);
+               Pchar ('"' + FileName + '"'), nil, sw_ShowNormal);
 end;
 
-// ---------------------------------------------------------------------------------------------------------------------
 
-// izbacuje iz fajla prva tri byte-a BOM header za UTF-8 BOM fajlove i pretvara if u obiène/prave UTF-8 fajlove
+// remove BOM header from UTF-8 BOM files and makes irt a proper UTF-8 file
 
 procedure StripBOMFromUtf8File (
-  const sFileName:string);      // ime ulaznog fajla (s apsolutnom putanjom)
-
-type
-  T3ac = array [1..3] of AnsiChar;  // polje od tri ansi (1 znak = 1 byte) karaktera
+  const FileName: string);   // file name (directory included)
 
 const
-  iBomSize = 3;                 // duljina BOM header-a u UTF-8 BOM fajlu
-  aUtf8 : T3ac = #$EF#$BB#$BF;  // UTF-8 BOM header
+  Utf8BomHeader : AnsiString = #$EF#$BB#$BF;      // UTF-8 BOM header
 
 var
-  oFile,                        // (ulazni) fajl (FileStream) iz kojeg izbacujem BOM header
-  oTemp: TFileStream;           // privremeni fajl (FileStream) u kojeg zapisujem sadržaj fajla iza BOM headera
-  aBom : T3ac;                  // polje od 3 ansi (jednobajtna) znaka u koje uèitavam UTF-8 zaglavlje
+  InputFile,
+  TempFile: TFileStream;
+  FileHeader : AnsiString;
 
 begin  // func StripBOMFromUtf8File
   try
-    oFile := TFileStream.Create (sFileName, fmOpenRead);          // otvaram ulazni fajl za èitanje
+    InputFile := TFileStream.Create (FileName, fmOpenRead);
     try
-      oFile.Read(aBom, 3);                                          // èitam UTF-8 BOM header fajla
-      // provjeravam je li UTF-8 BOM header ispravan i ako nije dižem iznimku
-      if (aBom[1] <> aUtf8[1]) Or (aBom[2] <> aUtf8[2]) Or (aBom[3] <> aUtf8[3]) then
-        raise EItSystemError.Create ('Neispravan format UTF-8 BOM zaglavlja!'#13#10#13#10 +
-                                     'Datoteka: ' + sFileName);
-      oFile.Seek (iBomSize, soFromBeginning);                       // pomièem pointer iza BOM header-a
-      oTemp := TFileStream.Create (sFileName + '.~temp', fmCreate); // kreiram pomoæni fajl za pisanje
-      try
-        oTemp.CopyFrom (oFile, oFile.Size - iBomSize) ;               // kopiram u pomoæni ostatak sadržaja ulaznog fajla
-      finally
-        oTemp.Free;             // zatvara pomoæni FileStream
-      end;
-    finally
-      oFile.Free;               // zatvara glavni FileStream
-    end;
-    DeleteFile (sFileName);                                         // brišem ulazni fajl s diska
-    RenameFile (sFileName + '.~temp', sFileName);                   // pomoæni fajl preimenujem u ime ulaznog fajla
-  except
-    on E: EItSystemError do     // ovo samo proslijedim
-      raise;
-    on E: Exception do          // ako je nastao bilo koji drugi problem to prijavim
-      raise EItSystemError.Create ('Neuspješna konverzija UTF-8 BOM zaglavlja!'#13#10#13#10 +
-                                   'Datoteka: ' + sFileName + #13#10#13#10 + E.Message);
-  end;
-end;  // func StripBOMFromUtf8File
+      InputFile.Read (FileHeader, 3);  // read 3 bytes
 
-// =====================================================================================================================
+      if FileHeader <> Utf8BomHeader then
+        raise EitSystemConversionError.Create ('Invalid UTF-8 BOM header!' + CrLf + CrLf + 'File: ' + FileName);
+
+      InputFile.Seek (Length (Utf8BomHeader), soFromBeginning);           // move file pointer behind BOM header
+      TempFile := TFileStream.Create (FileName + '.~temp', fmCreate);
+      TempFile.CopyFrom (InputFile, InputFile.Size - Length (Utf8BomHeader)) ;   // copy rest of original file to temp
+    finally
+      FreeAndNil (TempFile);
+      FreeAndNil (InputFile);
+    end;
+
+    DeleteFile (FileName);                                        // delete original file
+    RenameFile (FileName + '.~temp', FileName);                   // rename temp file
+  except
+    on E: EitSystemConversionError do
+      raise;
+    on E: Exception do
+      raise EitSystemConversionError.Create ('UTF-8 BOM header removal failed!' + CrLf + CrLf +
+                                             'File: ' + FileName + CrLf + CrLf + E.Message);
+  end;
+end;
 
 
 // example function with parameters with default values
 
 function LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
 begin
-//   result := RightStr(StringOfChar(pad,length) + IntToStr(value), length );
+  Result := RightStr (StringOfChar (pad,length) + IntToStr (value), length);
 end;
-
 
 
 end.
