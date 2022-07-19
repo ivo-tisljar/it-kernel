@@ -171,7 +171,7 @@ procedure StripBOMFromUtf8File (const FileName: string);          // file name (
 var
   InputFile, TempFile: TFileStream;
 
-begin  // func StripBOMFromUtf8File
+begin
   try
     InputFile := TFileStream.Create (FileName, fmOpenRead);
     try
