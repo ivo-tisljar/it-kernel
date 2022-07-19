@@ -38,7 +38,7 @@ procedure OpenFileInNotepadPlusPlus (const Handle:HWND; const FileName: string);
 procedure StripBOMFromUtf8File (const FileName:string);
 
 
-//  example function with parameters with default values
+// example function with parameters with default values
 
 function  LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
 
@@ -121,9 +121,7 @@ begin
 end;
 
 
-procedure OpenFileInDefaultBrowser (
-  const Handle:HWND;          // (window) form handle
-  const FileName: string);    // file name (directory included)
+procedure OpenFileInDefaultBrowser (const Handle:HWND; const FileName: string);   // (window) form handle, file name (directory included)
 begin
   ShellExecute (Handle, 'open', PChar (FileName), '', nil, sw_ShowNormal);
 end;
@@ -131,9 +129,7 @@ end;
 
 // start Edge and opens file, if file is already open in Edge creates new tab with the file
 
-procedure OpenFileInEdge (
-  const Handle:HWND;          // (window) form handle
-  const FileName: string);    // file name (directory included)
+procedure OpenFileInEdge (const Handle:HWND; const FileName: string);   // (window) form handle, file name (directory included)
 begin
   ShellExecute (Handle, 'open', Pchar ('"shell:Appsfolder\Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge"'),
                Pchar ('"""' + FileName + '"""'), nil, sw_ShowNormal);
@@ -142,40 +138,44 @@ end;
 
 // start Notepad++ and opens file, if file is already open in Notepad++ activate tab with a file and ask for reload if file was changed
 
-procedure OpenFileInNotepadPlusPlus (
-  const Handle:HWND;          // (window) form handle
-  const FileName: string);    // file name (directory included)
+procedure OpenFileInNotepadPlusPlus (const Handle:HWND; const FileName: string);    // (window) form handle, file name (directory included)
 begin
   ShellExecute (Handle, 'open', Pchar ('"C:\Program Files (x86)\Notepad++\notepad++.exe"'),
                Pchar ('"' + FileName + '"'), nil, sw_ShowNormal);
 end;
 
 
-// remove BOM header from UTF-8 BOM files and makes irt a proper UTF-8 file
+// skip BOM header and copy rest of the file, raise exception if no BOM header found
 
-procedure StripBOMFromUtf8File (
-  const FileName: string);   // file name (directory included)
-
-const
-  Utf8BomHeader : AnsiString = #$EF#$BB#$BF;      // UTF-8 BOM header
-
+procedure SkipBOMAndCopyRestOfTheFile (var InputFile, TempFile: TFileStream; const FileName: string);
 var
-  InputFile,
-  TempFile: TFileStream;
-  FileHeader : AnsiString;
+  FileHeader: AnsiString;
+const
+  Utf8BomHeader: AnsiString = #$EF#$BB#$BF;   // UTF-8 BOM header
+
+begin
+  InputFile.Read(FileHeader, 3);              // read 3 bytes
+
+  if FileHeader <> Utf8BomHeader then
+    raise EitSystemConversionError.Create('Invalid UTF-8 BOM header!' + CrLf + CrLf + 'File: ' + FileName);
+
+  InputFile.Seek(Length(Utf8BomHeader), soFromBeginning);   // move file pointer behind BOM header
+  TempFile := TFileStream.Create(FileName + '.~temp', fmCreate);
+  TempFile.CopyFrom(InputFile, InputFile.Size - Length(Utf8BomHeader));
+end;
+
+
+// remove BOM header from UTF-8 BOM files and makes it a proper UTF-8 file
+
+procedure StripBOMFromUtf8File (const FileName: string);          // file name (directory included)
+var
+  InputFile, TempFile: TFileStream;
 
 begin  // func StripBOMFromUtf8File
   try
     InputFile := TFileStream.Create (FileName, fmOpenRead);
     try
-      InputFile.Read (FileHeader, 3);  // read 3 bytes
-
-      if FileHeader <> Utf8BomHeader then
-        raise EitSystemConversionError.Create ('Invalid UTF-8 BOM header!' + CrLf + CrLf + 'File: ' + FileName);
-
-      InputFile.Seek (Length (Utf8BomHeader), soFromBeginning);           // move file pointer behind BOM header
-      TempFile := TFileStream.Create (FileName + '.~temp', fmCreate);
-      TempFile.CopyFrom (InputFile, InputFile.Size - Length (Utf8BomHeader)) ;   // copy rest of original file to temp
+      SkipBOMAndCopyRestOfTheFile(InputFile, TempFile, FileName); // copy rest of original file to temp
     finally
       FreeAndNil (TempFile);
       FreeAndNil (InputFile);
