@@ -24,7 +24,9 @@ type
   end;
 
 
-procedure ConvertPngToJpeg (const PngFileName, JpegFileName: String);
+function  AppendBackslash (const DirectoryName: string): string;
+
+procedure ConvertPngToJpeg (const PngFileName, JpegFileName: string);
 
 function  IfInt (const Test: boolean; const i1: integer): integer; overload;
 function  IfInt (const Test: boolean; const i1, i2: integer): integer; overload;
@@ -47,6 +49,15 @@ implementation
 
 uses
   Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage, Vcl.Graphics;
+
+
+function  AppendBackslash (const DirectoryName: string): string;
+begin
+  if DirectoryName[Length (DirectoryName)] = '\' then
+    Result := DirectoryName
+  else
+    Result := DirectoryName + '\';
+end;
 
 
 procedure ConvertPngToJpeg (const PngFileName, JpegFileName: String);
