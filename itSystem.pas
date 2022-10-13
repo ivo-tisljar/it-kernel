@@ -93,7 +93,7 @@ end;
 
 function  DateIntToAnsiDateStr (Date: integer): string;
 begin
-  Result := LeftPad (Date Mod 10000, 4) + '-' + LeftPad ((Date Div 100) Mod 100, 2) + '-' + LeftPad (Date Mod 100, 2);
+  Result := LeftPad (Date Div 10000, 4) + '-' + LeftPad ((Date Div 100) Mod 100, 2) + '-' + LeftPad (Date Mod 100, 2);
 end;
 
 
@@ -228,7 +228,7 @@ end;
 
 function  TimeIntToAnsiTimeStr (Time: integer): string;
 begin
-  Result := LeftPad (Time Mod 10000, 4) + ':' + LeftPad ((Time Div 100) Mod 100, 2) + ':' + LeftPad (Time Mod 100, 2);
+  Result := LeftPad (Time Div 10000, 2) + ':' + LeftPad ((Time Div 100) Mod 100, 2) + ':' + LeftPad (Time Mod 100, 2);
 end;
 
 
