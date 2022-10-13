@@ -28,10 +28,14 @@ function  AppendBackslash (const DirectoryName: string): string;
 
 procedure ConvertPngToJpeg (const PngFileName, JpegFileName: string);
 
+function  DateIntToAnsiDateStr (Date: integer): string;
+
 function  IfInt (const Test: boolean; const i1: integer): integer; overload;
 function  IfInt (const Test: boolean; const i1, i2: integer): integer; overload;
 function  IfStr (const Test: boolean; const s1: string): string; overload;
 function  IfStr (const Test: boolean; const s1, s2: string): string; overload;
+
+function  LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
 
 procedure OpenFileInDefaultBrowser (const Handle:HWND; const FileName: string);
 procedure OpenFileInEdge (const Handle:HWND; const FileName: string);
@@ -39,10 +43,8 @@ procedure OpenFileInNotepadPlusPlus (const Handle:HWND; const FileName: string);
 
 procedure StripBOMFromUtf8File (const FileName:string);
 
+function  TimeIntToAnsiTimeStr (Time: integer): string;
 
-// example function with parameters with default values
-
-function  LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
 
 
 implementation
@@ -87,10 +89,17 @@ begin
 end;
 
 
+// converts date from date integer (yyyymmdd) to date ansi string 'yyyy-mm-dd'
+
+function  DateIntToAnsiDateStr (Date: integer): string;
+begin
+  Result := LeftPad (Date Mod 10000, 4) + '-' + LeftPad ((Date Div 100) Mod 100, 2) + '-' + LeftPad (Date Mod 100, 2);
+end;
+
+
 // returns integer when test is true, 0 if test is false
 
 function IfInt (const Test: boolean; const i1: integer): integer;
-
 begin
   if Test then
     Result := i1
@@ -131,6 +140,17 @@ begin
     Result := s2;
 end;
 
+
+// convert int to string and pads it with leading zeros to desired length
+// example function with parameters with default values
+
+function LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
+begin
+  Result := RightStr (StringOfChar (pad,length) + IntToStr (value), length);
+end;
+
+
+// start default browser and opens file, if file is already open in default browser creates new tab with the file
 
 procedure OpenFileInDefaultBrowser (const Handle:HWND; const FileName: string);   // (window) form handle, file name (directory included)
 begin
@@ -204,11 +224,11 @@ begin
 end;
 
 
-// example function with parameters with default values
+// converts time from time integer (hhmmss) to time ansi string 'hh:mm:ss'
 
-function LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
+function  TimeIntToAnsiTimeStr (Time: integer): string;
 begin
-  Result := RightStr (StringOfChar (pad,length) + IntToStr (value), length);
+  Result := LeftPad (Time Mod 10000, 4) + ':' + LeftPad ((Time Div 100) Mod 100, 2) + ':' + LeftPad (Time Mod 100, 2);
 end;
 
 
