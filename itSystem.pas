@@ -20,29 +20,31 @@ const
 // conversionError
 
 type
-  EitSystemConversionError = class (Exception)
+  EitSystemConversionError = class(Exception)
   end;
 
 
-function  AppendBackslash (const DirectoryName: string): string;
+function  AppendBackslash(const DirectoryName: string): string;
 
-procedure ConvertPngToJpeg (const PngFileName, JpegFileName: string);
+procedure ConvertPngToJpeg(const PngFileName, JpegFileName: string);
 
-function  DateIntToAnsiDateStr (Date: integer): string;
+function  DateIntToAnsiDateStr(Date: integer): string;
 
-function  IfInt (const Test: boolean; const i1: integer): integer; overload;
-function  IfInt (const Test: boolean; const i1, i2: integer): integer; overload;
-function  IfStr (const Test: boolean; const s1: string): string; overload;
-function  IfStr (const Test: boolean; const s1, s2: string): string; overload;
+function  IfInt(const Test: boolean; const i1: integer): integer; overload;
+function  IfInt(const Test: boolean; const i1, i2: integer): integer; overload;
+function  IfStr(const Test: boolean; const s1: string): string; overload;
+function  IfStr(const Test: boolean; const s1, s2: string): string; overload;
 
-function  LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
+function  LeftPad(value:integer; length:integer=2; pad:char='0'): string; overload;
 
-procedure OpenFileInDefaultBrowser (const Handle:HWND; const FileName: string);
-procedure OpenFileInEdge (const Handle:HWND; const FileName: string);
-procedure OpenFileInNotepadPlusPlus (const Handle:HWND; const FileName: string);
+procedure OpenFileInDefaultBrowser(const Handle:HWND; const FileName: string);
+procedure OpenFileInEdge(const Handle:HWND; const FileName: string);
+procedure OpenFileInNotepadPlusPlus(const Handle:HWND; const FileName: string);
 
-function  TimeIntToAnsiTimeStr (Time: integer): string;
+function  RecordCountTextHR(const RecordCount: integer): string;
+function  RecordsFoundTextHR(const RecordCount: integer): string;
 
+function  TimeIntToAnsiTimeStr(Time: integer): string;
 
 
 implementation
@@ -51,16 +53,16 @@ uses
   Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage, Vcl.Graphics;
 
 
-function  AppendBackslash (const DirectoryName: string): string;
+function AppendBackslash(const DirectoryName: string): string;
 begin
-  if (DirectoryName[Length (DirectoryName)] = '\') then
+  if (DirectoryName[Length(DirectoryName)] = '\') then
     Result := DirectoryName
   else
     Result := DirectoryName + '\';
 end;
 
 
-procedure ConvertPngToJpeg (const PngFileName, JpegFileName: String);
+procedure ConvertPngToJpeg(const PngFileName, JpegFileName: String);
 
 var
   PngImage: TPngImage;
@@ -73,31 +75,31 @@ begin
   JpegImage := TJpegImage.Create;
 
   try
-    PngImage.LoadFromFile (PngFileName);
+    PngImage.LoadFromFile(PngFileName);
     BmpImage.Width := PngImage.Width;
     BmpImage.Height := PngImage.Height;
-    PngImage.Draw (BmpImage.Canvas, BmpImage.Canvas.ClipRect);
-    JpegImage.Assign (BmpImage);
-    JpegImage.SaveToFile (JpegFileName);
+    PngImage.Draw(BmpImage.Canvas, BmpImage.Canvas.ClipRect);
+    JpegImage.Assign(BmpImage);
+    JpegImage.SaveToFile(JpegFileName);
   finally
-    FreeAndNil (JpegImage);
-    FreeAndNil (BmpImage);
-    FreeAndNil (PngImage);
+    FreeAndNil(JpegImage);
+    FreeAndNil(BmpImage);
+    FreeAndNil(PngImage);
   end;
 end;
 
 
 // converts date from date integer (yyyymmdd) to date ansi string 'yyyy-mm-dd'
 
-function  DateIntToAnsiDateStr (Date: integer): string;
+function DateIntToAnsiDateStr(Date: integer): string;
 begin
-  Result := LeftPad (Date Div 10000, 4) + '-' + LeftPad ((Date Div 100) Mod 100, 2) + '-' + LeftPad (Date Mod 100, 2);
+  Result := LeftPad(Date Div 10000, 4) + '-' + LeftPad((Date Div 100) Mod 100, 2) + '-' + LeftPad(Date Mod 100, 2);
 end;
 
 
 // returns integer when test is true, 0 if test is false
 
-function IfInt (const Test: boolean; const i1: integer): integer;
+function IfInt(const Test: boolean; const i1: integer): integer;
 begin
   if (Test) then
     Result := i1
@@ -108,7 +110,7 @@ end;
 
 // returns one of two integers depending on test
 
-function IfInt (const Test: boolean; const i1, i2: integer): integer;
+function IfInt(const Test: boolean; const i1, i2: integer): integer;
 begin
   if (Test) then
     Result := i1
@@ -119,7 +121,7 @@ end;
 
 // returns string when test is true
 
-function IfStr (const Test: boolean; const s1: string): string;
+function IfStr(const Test: boolean; const s1: string): string;
 begin
   if (Test) then
     Result := s1
@@ -130,7 +132,7 @@ end;
 
 // returns one of two strings depending on test
 
-function IfStr (const Test: boolean; const s1, s2: string): string;
+function IfStr(const Test: boolean; const s1, s2: string): string;
 begin
   if (Test) then
     Result := s1
@@ -142,43 +144,59 @@ end;
 // convert int to string and pads it with leading zeros to desired length
 // example function with parameters with default values
 
-function LeftPad (value:integer; length:integer=2; pad:char='0'): string; overload;
+function LeftPad(value:integer; length:integer=2; pad:char='0'): string; overload;
 begin
-  Result := RightStr (StringOfChar (pad,length) + IntToStr (value), length);
+  Result := RightStr(StringOfChar(pad, length) + IntToStr(value), length);
 end;
 
 
 // start default browser and opens file, if file is already open in default browser creates new tab with the file
 
-procedure OpenFileInDefaultBrowser (const Handle:HWND; const FileName: string);   // (window) form handle, file name (directory included)
+procedure OpenFileInDefaultBrowser(const Handle:HWND; const FileName: string);   // (window) form handle, file name (directory included)
 begin
-  ShellExecute (Handle, 'open', PChar (FileName), '', nil, sw_ShowNormal);
+  ShellExecute(Handle, 'open', PChar(FileName), '', nil, sw_ShowNormal);
 end;
 
 
 // start Edge and opens file, if file is already open in Edge creates new tab with the file
 
-procedure OpenFileInEdge (const Handle:HWND; const FileName: string);   // (window) form handle, file name (directory included)
+procedure OpenFileInEdge(const Handle:HWND; const FileName: string);   // (window) form handle, file name (directory included)
 begin
-  ShellExecute (Handle, 'open', Pchar ('"shell:Appsfolder\Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge"'),
-               Pchar ('"""' + FileName + '"""'), nil, sw_ShowNormal);
+  ShellExecute(Handle, 'open', Pchar('"shell:Appsfolder\Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge"'),
+               Pchar('"""' + FileName + '"""'), nil, sw_ShowNormal);
 end;
 
 
 // start Notepad++ and opens file, if file is already open in Notepad++ activate tab with a file and ask for reload if file was changed
 
-procedure OpenFileInNotepadPlusPlus (const Handle:HWND; const FileName: string);    // (window) form handle, file name (directory included)
+procedure OpenFileInNotepadPlusPlus(const Handle:HWND; const FileName: string);    // (window) form handle, file name (directory included)
 begin
-  ShellExecute (Handle, 'open', Pchar ('"C:\Program Files (x86)\Notepad++\notepad++.exe"'),
-               Pchar ('"' + FileName + '"'), nil, sw_ShowNormal);
+  ShellExecute(Handle, 'open', Pchar('"C:\Program Files (x86)\Notepad++\notepad++.exe"'),
+               Pchar('"' + FileName + '"'), nil, sw_ShowNormal);
+end;
+
+
+//
+
+function RecordCountTextHR(const RecordCount: integer): string;
+begin
+  Result := 'zapis' + IfStr(Not(RecordCount Mod 100 in [1, 21, 31, 41, 51, 61, 71, 81, 91]), 'a');
+end;
+
+
+//
+
+function RecordsFoundTextHR(const RecordCount: integer): string;
+begin
+  Result := 'Pronaðen' + IfStr(Not(RecordCount Mod 100 in [1, 21, 31, 41, 51, 61, 71, 81, 91]), 'o');
 end;
 
 
 // converts time from time integer (hhmmss) to time ansi string 'hh:mm:ss'
 
-function  TimeIntToAnsiTimeStr (Time: integer): string;
+function TimeIntToAnsiTimeStr(Time: integer): string;
 begin
-  Result := LeftPad (Time Div 10000, 2) + ':' + LeftPad ((Time Div 100) Mod 100, 2) + ':' + LeftPad (Time Mod 100, 2);
+  Result := LeftPad(Time Div 10000, 2) + ':' + LeftPad((Time Div 100) Mod 100, 2) + ':' + LeftPad(Time Mod 100, 2);
 end;
 
 
